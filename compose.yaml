@@ -5,3 +5,9 @@ services:
       - "8080:80"
     volumes:
       - ./site:/usr/share/nginx/html:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
