@@ -1,4 +1,12 @@
 services:
+  node-exporter:
+    image: prom/node-exporter
+    pid: host
+    command:
+      - "--path.rootfs=/host"
+    volumes:
+      - "/:/host:ro,rslave"
+    restart: unless-stopped
   grafana:
     image: grafana/grafana
     ports:
