@@ -500,6 +500,50 @@
       ],
       "title": "Ubuntu 内存使用率（%）",
       "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "ag3jk6xet40e8d"
+      },
+      "gridPos": {
+        "h": 9,
+        "w": 8,
+        "x": 16,
+        "y": 9
+      },
+      "id": 6,
+      "options": {
+        "dedupStrategy": "none",
+        "enableInfiniteScrolling": false,
+        "enableLogDetails": true,
+        "prettifyLogMessage": true,
+        "showControls": false,
+        "showFieldSelector": false,
+        "showLevel": true,
+        "showLogAttributes": true,
+        "showTime": false,
+        "sortOrder": "Descending",
+        "timestampResolution": "ms",
+        "unwrappedColumns": false,
+        "wrapLogMessage": false
+      },
+      "pluginVersion": "13.3.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "loki",
+            "uid": "ag3jk6xet40e8d"
+          },
+          "direction": "backward",
+          "editorMode": "code",
+          "expr": "{job=\"docker\"}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Docker 容器日志",
+      "type": "logs"
     }
   ],
   "preload": false,
@@ -524,8 +568,8 @@
     ]
   },
   "timezone": "browser",
-  "title": "Ubuntu 根磁盘使用率（%）",
-  "version": 10,
+  "title": "Linux 网站运维监控",
+  "version": 13,
   "uid": "ad47qnv",
   "id": 2121593068339200
 }
