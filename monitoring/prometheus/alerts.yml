@@ -9,3 +9,11 @@ groups:
         annotations:
           summary: "Nginx 指标采集失败"
           description: "Prometheus 已连续 1 分钟无法采集 Nginx 指标。"
+      - alert: RootDiskUsageHigh
+        expr: 100 * (1 - node_filesystem_avail_bytes{mountpoint="/", fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{mountpoint="/", fstype!~"tmpfs|overlay"}) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Ubuntu 根磁盘空间不足"
+          description: "根磁盘使用率已超过 80%，并持续 5 分钟。"
