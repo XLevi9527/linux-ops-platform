@@ -1,0 +1,9 @@
+[Unit]
+Description=Backup Linux Ops Platform
+
+[Service]
+Type=oneshot
+User=xa
+Environment=HOME=/home/xa
+WorkingDirectory=/home/xa/linux-ops-platform
+ExecStart=/home/xa/linux-ops-platform/backup.sh

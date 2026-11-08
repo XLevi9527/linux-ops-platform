@@ -1,0 +1,10 @@
+[Unit]
+Description=Weekly backup timer for Linux Ops Platform
+
+[Timer]
+OnCalendar=Sun *-*-* 03:00:00
+Persistent=true
+Unit=linux-ops-backup.service
+
+[Install]
+WantedBy=timers.target
