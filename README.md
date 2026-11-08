@@ -26,3 +26,16 @@ docker compose up -d
 ```bash
 docker compose up -d
 docker compose ps
+```
+## 自动备份
+
+项目使用 systemd timer 每周日凌晨 3 点执行备份。定时器配置在 `systemd/` 目录中；备份文件保存在 `/home/xa/backups/`。
+
+首次安装或恢复时，在项目目录执行：
+
+```bash
+sudo cp systemd/linux-ops-backup.service /etc/systemd/system/
+sudo cp systemd/linux-ops-backup.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now linux-ops-backup.timer
+```
