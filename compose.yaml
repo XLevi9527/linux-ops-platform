@@ -3,8 +3,6 @@ services:
     image: prom/alertmanager:latest
     command:
       - --config.file=/etc/alertmanager/alertmanager.yml
-    ports:
-      - "9093:9093"
     volumes:
       - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
       - ./secrets/163_smtp_password:/run/secrets/163_smtp_password:ro
@@ -66,8 +64,6 @@ services:
 
   prometheus:
     image: prom/prometheus
-    ports:
-      - "9090:9090"
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./monitoring/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
