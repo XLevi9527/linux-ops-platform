@@ -39,3 +39,21 @@ sudo cp systemd/linux-ops-backup.timer /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now linux-ops-backup.timer
 ```
+
+### 备份保留与恢复验证
+
+每次备份完成后，脚本保留最新 7 份项目备份，并删除更早的项目备份。清理范围仅限 `linux-ops-platform-*.tar.gz`。
+
+查看备份列表：
+
+```bash
+ls -lt ~/backups/linux-ops-platform-*.tar.gz
+```
+
+将备份解压到临时目录进行恢复验证，不会覆盖当前项目。把示例文件名替换成列表中的实际备份文件名：
+
+```bash
+mkdir -p ~/restore-test
+tar -xzf ~/backups/linux-ops-platform-YYYYMMDD-HHMMSS.tar.gz -C ~/restore-test
+ls ~/restore-test/linux-ops-platform
+```
