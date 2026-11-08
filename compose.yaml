@@ -1,4 +1,14 @@
 services:
+  alertmanager:
+    image: prom/alertmanager:latest
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./secrets/163_smtp_password:/run/secrets/163_smtp_password:ro
+    restart: unless-stopped
   alloy:
     image: grafana/alloy:latest
     command:

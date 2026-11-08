@@ -1,0 +1,6 @@
+
+# 163 邮箱授权码（敏感信息）
+secrets/
+
+# 本机配置含私人邮箱地址，不提交
+/monitoring/alertmanager/alertmanager.yml
