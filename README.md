@@ -1,59 +1,170 @@
-# Linux 企业级网站部署与运维平台
+# Linux 网站部署与运维监控平台
 
-这是我的第一个 Linux 网站部署项目，运行在 Ubuntu 虚拟机中，使用 Docker Compose 管理 Nginx 容器。
+一个在 Ubuntu 虚拟机（VMware）上完成的个人 Linux 运维练习项目。使用 Docker Compose 部署 Nginx 静态网站，并加入指标监控、日志收集、邮件告警和自动备份。
 
-## 启动网站
+> **说明**：这是本地实验环境下的个人学习项目，不是承载真实业务的生产平台。已验证的功能和尚未实现的内容见下文。
+
+## 功能
+
+- **网站部署**：Nginx 容器提供静态页面，配置健康检查和自动重启策略。
+- **指标监控**：Nginx Exporter 和 Node Exporter 采集网站与主机指标，由 Prometheus 存储，Grafana 展示连接数、请求速率、CPU、内存、磁盘等图表。
+- **日志收集**：Alloy 收集 Docker 容器日志，发送到 Loki，在 Grafana Explore 中查询。
+- **邮件告警**：Prometheus 规则触发告警，Alertmanager 通过 163 邮箱 SMTP 发送邮件。
+- **自动备份**：Shell 脚本打包项目并保留最近 7 份备份，由 systemd timer 每周日凌晨 3 点触发。
+
+## 已验证的内容
+
+- Nginx 网站可访问，容器健康检查通过。
+- Prometheus 能采集 Nginx 和 Ubuntu 主机指标。
+- Grafana 仪表盘能显示监控图表。
+- Loki 能查询 Docker 容器日志，例如 `{job="docker"} |= "404"`。
+- Nginx 指标采集失败时，告警能触发、恢复，并成功送达邮件。
+- 备份脚本能生成压缩包并清理旧备份；备份已解压到临时目录验证可用。
+- systemd timer 已启用。
+
+## 架构
+
+```text
+浏览器 ──> Nginx 容器 ──> site/index.html
+                  │
+                  └── /stub_status ──> Nginx Exporter ──┐
+Ubuntu 主机 ──> Node Exporter ──────────────────────────┤
+                                                        v
+                                                   Prometheus
+                                                     │     │
+                                          指标查询   │     └── 告警 ──> Alertmanager ──> 邮箱
+                                                     v
+                                                   Grafana
+
+Docker 容器日志 ──> Alloy ──> Loki ──> Grafana
+
+backup.sh ──> 项目压缩包 ──> ~/backups/
+systemd timer ──> 定时运行 backup.sh
+```
+
+- **指标链路**：Exporter 采集 → Prometheus 存储 → Grafana 展示；触发规则后由 Alertmanager 发邮件。
+- **日志链路**：Alloy 收集 → Loki 存储 → Grafana 查询。
+
+## 技术栈
+
+Ubuntu、Docker、Docker Compose、Nginx、Prometheus、Nginx Exporter、Node Exporter、Grafana、Loki、Grafana Alloy、Alertmanager、Bash、systemd
+
+## 目录结构
+
+```text
+linux-ops-platform/
+├── compose.yaml                     # 服务编排
+├── site/
+│   └── index.html                   # 网站页面
+├── monitoring/
+│   ├── nginx/default.conf           # Nginx 配置（含 /stub_status）
+│   ├── prometheus/
+│   │   ├── prometheus.yml           # 采集目标
+│   │   └── alerts.yml               # 告警规则
+│   ├── alertmanager/
+│   │   └── alertmanager.example.yml # 邮件配置示例（占位值）
+│   ├── alloy/config.alloy           # 日志收集配置
+│   ├── loki/loki-config.yaml        # 日志存储配置
+│   └── grafana/dashboard.json       # 导出的仪表盘
+├── systemd/
+│   ├── linux-ops-backup.service     # 执行一次备份
+│   └── linux-ops-backup.timer       # 每周日 03:00 触发
+├── backup.sh                        # 备份脚本
+├── deploy.sh                        # 部署脚本
+└── .gitignore
+```
+
+## 快速开始
+
+### 1. 准备配置（敏感文件不在仓库中）
+
+仓库不包含真实的邮箱和密码。请自行创建：
 
 ```bash
-docker compose up -d
+# 复制示例配置，并改成你自己的邮箱信息
+cp monitoring/alertmanager/alertmanager.example.yml monitoring/alertmanager/alertmanager.yml
+
+# 创建 SMTP 授权码文件（163 邮箱需使用"授权码"，不是登录密码）
+mkdir -p secrets
+echo "你的授权码" > secrets/163_smtp_password
+chmod 600 secrets/163_smtp_password
 ```
-## 监控与邮件告警
 
-本项目使用 Prometheus 采集 Nginx 和 Ubuntu 主机指标，Grafana 展示监控面板，Alertmanager 通过 163 邮箱发送告警。Loki 和 Alloy 用于收集 Docker 容器日志。
+然后编辑 `alertmanager.yml`，把 `your-address@163.com` 替换为你的邮箱。
 
-### 访问地址
-
-- 网站：`http://192.168.48.129:8080`
-- Prometheus：`http://192.168.48.129:9090`
-- Grafana：`http://192.168.48.129:3000`
-- Alertmanager：`http://192.168.48.129:9093`
-
-
-### 启动和检查
-
-在项目目录执行：
+### 2. 启动
 
 ```bash
 docker compose up -d
 docker compose ps
 ```
-## 自动备份
 
-项目使用 systemd timer 每周日凌晨 3 点执行备份。定时器配置在 `systemd/` 目录中；备份文件保存在 `/home/xa/backups/`。
+### 3. 访问
 
-首次安装或恢复时，在项目目录执行：
+以 `docker compose ps` 中显示的**已发布端口**为准。当前配置下，网站使用 `8080`，Grafana 使用 `3000`；Prometheus 和 Alertmanager 仅在 Compose 内部网络中使用，未发布到宿主机。
 
-```bash
-sudo cp systemd/linux-ops-backup.service /etc/systemd/system/
-sudo cp systemd/linux-ops-backup.timer /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now linux-ops-backup.timer
-```
-
-### 备份保留与恢复验证
-
-每次备份完成后，脚本保留最新 7 份项目备份，并删除更早的项目备份。清理范围仅限 `linux-ops-platform-*.tar.gz`。
-
-查看备份列表：
+## 常用命令
 
 ```bash
-ls -lt ~/backups/linux-ops-platform-*.tar.gz
+docker compose ps                              # 查看容器状态和端口
+docker compose up -d                           # 后台启动
+docker compose stop                            # 停止服务
+docker compose restart                         # 重启服务
+docker compose logs --tail=50 -f web           # 查看网站容器日志
+./backup.sh                                    # 手动备份一次
+ls -lt ~/backups/linux-ops-platform-*.tar.gz   # 查看备份列表
 ```
 
-将备份解压到临时目录进行恢复验证，不会覆盖当前项目。把示例文件名替换成列表中的实际备份文件名：
+## 告警规则
+
+| 规则 | 触发条件 |
+|---|---|
+| `NginxMetricsUnavailable` | `up{job="nginx"} == 0` 持续 1 分钟 |
+| `RootDiskUsageHigh` | 根分区使用率超过阈值并持续一段时间 |
+
+测试告警：停止 Nginx Exporter 容器，约 1 分钟后触发；重新启动后告警恢复。
+
+## 备份与恢复
+
+`backup.sh` 的流程：生成带时间戳的文件名 → 用 `tar` 打包项目（排除 `.git`）→ 只保留最新 7 份。
+
+恢复验证请解压到单独目录，**不要直接覆盖运行中的项目**：
 
 ```bash
 mkdir -p ~/restore-test
-tar -xzf ~/backups/linux-ops-platform-YYYYMMDD-HHMMSS.tar.gz -C ~/restore-test
-ls ~/restore-test/linux-ops-platform
+tar -xzf ~/backups/<备份文件>.tar.gz -C ~/restore-test
 ```
+
+启用定时备份：
+
+```bash
+sudo cp systemd/linux-ops-backup.* /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now linux-ops-backup.timer
+systemctl list-timers | grep linux-ops
+```
+
+## 截图
+
+> 将截图放入 `docs/images/` 后取消下面的注释；没有截图则删除本节。
+
+<!--
+![Grafana 仪表盘](docs/images/grafana-dashboard.png)
+![Loki 日志查询](docs/images/loki-logs.png)
+![告警邮件](docs/images/alert-email.png)
+-->
+
+## 局限与改进计划
+
+这是个人实验项目，以下是尚未完成的部分：
+
+- 未启用 UFW 防火墙，也没有做访问控制。
+- 部分镜像使用 `latest` 标签，计划固定具体版本。
+- 备份保存在同一台虚拟机内，计划同步到宿主机或异地。
+- 没有 HTTPS、域名和高可用。
+- 没有 CI/CD 自动化部署流水线。
+
+## 安全说明
+
+- `secrets/` 和真实的 `alertmanager.yml` 已在 `.gitignore` 中排除，请勿提交。
+- 仓库中仅保留带占位值的 `alertmanager.example.yml`。
