@@ -147,13 +147,11 @@ timer 设置了 `Persistent=true`：若计划时间虚拟机处于关机状态�
 
 ## 截图
 
-> 将截图放入 `docs/images/` 后取消下面的注释；没有截图则删除本节。
+<img width="1010" height="656" alt="Grafana 仪表盘" src="https://github.com/user-attachments/assets/6bf17ca9-2d02-486d-b841-19dd66d7d7c7" />
+<img width="1280" height="800" alt="Loki 日志查询" src="https://github.com/user-attachments/assets/41e72e26-360a-4594-8ba1-8f731fce9334" />
+<img width="1272" height="2800" alt="告警邮件恢复" src="https://github.com/user-attachments/assets/7c4b0697-19d7-4712-866a-e75c8ee5667d" />
+<img width="1272" height="2800" alt="告警邮件触发" src="https://github.com/user-attachments/assets/01c61dcb-bf51-4218-afb2-30b6f5e285bd" />
 
-<!--
-![Grafana 仪表盘](docs/images/grafana-dashboard.png)
-![Loki 日志查询](docs/images/loki-logs.png)
-![告警邮件](docs/images/alert-email.png)
--->
 
 ## 局限与改进计划
 
