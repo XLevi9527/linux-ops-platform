@@ -70,7 +70,7 @@ linux-ops-platform/
 │   ├── linux-ops-backup.service     # 执行一次备份
 │   └── linux-ops-backup.timer       # 每周日 03:00 触发
 ├── backup.sh                        # 备份脚本
-├── deploy.sh                        # 部署脚本
+├── deploy.sh                        # 部署脚本：校验配置 → 启动服务 → 显示状态
 └── .gitignore
 ```
 
@@ -117,12 +117,12 @@ ls -lt ~/backups/linux-ops-platform-*.tar.gz   # 查看备份列表
 
 ## 告警规则
 
-| 规则 | 触发条件 |
-|---|---|
-| `NginxMetricsUnavailable` | `up{job="nginx"} == 0` 持续 1 分钟 |
-| `RootDiskUsageHigh` | 根分区使用率超过阈值并持续一段时间 |
+| 规则 | 触发条件 | 级别 |
+|---|---|---|
+| `NginxMetricsUnavailable` | `up{job="nginx"} == 0` 持续 1 分钟 | warning |
+| `RootDiskUsageHigh` | 根分区（`/`，排除 tmpfs 和 overlay）使用率超过 80%，持续 5 分钟 | warning |
 
-测试告警：停止 Nginx Exporter 容器，约 1 分钟后触发；重新启动后告警恢复。
+测试告警：停止 Nginx Exporter 容器，约 1 分钟后触发；重新启动后告警恢复。> 已实际测试 `NginxMetricsUnavailable` 的触发、恢复和邮件送达；`RootDiskUsageHigh` 目前只配置了规则，尚未实际触发测试。
 
 ## 备份与恢复
 
@@ -143,6 +143,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now linux-ops-backup.timer
 systemctl list-timers | grep linux-ops
 ```
+timer 设置了 `Persistent=true`：若计划时间虚拟机处于关机状态，开机后会补执行一次错过的备份。
 
 ## 截图
 
